@@ -68,21 +68,21 @@
             }).addTo(map);
 
             const stations = [
-                { name: "Střelské Hoštice", location: [49.3051414, 13.7788925], passengers: 0 },
-                { name: "Dolní Poříčí", location: [49.2886125, 13.8008481], passengers: 0 },
-                { name: "Katovice", location: [49.2693519, 13.8235978], passengers: 0 },
-                { name: "Pracejovice", location: [49.2582358, 13.8489875], passengers: 0 },
-                { name: "Strakonice", location: [49.2551575, 13.9163047], passengers: 0 },
-                { name: "Modlešovice", location: [49.2565003, 13.9762058], passengers: 0 },  
-                { name: "Čejetice", location: [49.2515564, 14.0157986], passengers: 0 },
-                { name: "Sudoměř u Písku", location: [49.2494011, 14.0572156], passengers: 0 },
-                { name: "Ražice", location: [49.2446214, 14.1085939], passengers: 0 },
+                { name: "Střelské Hoštice", location: [49.3051414, 13.7788925] },
+                { name: "Dolní Poříčí", location: [49.2886125, 13.8008481] },
+                { name: "Katovice", location: [49.2693519, 13.8235978] },
+                { name: "Pracejovice", location: [49.2582358, 13.8489875] },
+                { name: "Strakonice", location: [49.2551575, 13.9163047] },
+                { name: "Modlešovice", location: [49.2565003, 13.9762058] },  
+                { name: "Čejetice", location: [49.2515564, 14.0157986] },
+                { name: "Sudoměř u Písku", location: [49.2494011, 14.0572156] },
+                { name: "Ražice", location: [49.2446214, 14.1085939] },
             ];
 
             const player = {
                 money: 1000,
                 trains: 0,
-                ownedStations: new Set()
+                unlockedStations: [],
             };
 
             // Aktualizace informací o hráči
@@ -101,40 +101,69 @@
 
             // Přidání vlakových zastávek na mapu
             stations.forEach(station => {
+                station.passengers = [];
                 const marker = L.marker(station.location, { icon: trainIcon }).addTo(map);
-                marker.bindPopup(() => {
-                    return `<b>${station.name}</b><br>
-                            <p>Cestující: <span id="passengers-${station.name}">${station.passengers}</span></p>
-                            <button onclick="buyStation('${station.name}')">Koupit zastávku</button>`;
-                });
-                station.marker = marker;
+                marker.bindPopup(createStationPopup(station));
+
+                // Generování cestujících každých 10 sekund
+                setInterval(() => generatePassenger(station), 10000);
             });
 
-            // Funkce pro koupi zastávky
-            window.buyStation = function(stationName) {
-                if (player.money >= 100) {
-                    player.money -= 100;
-                    player.trains += 1;
-                    player.ownedStations.add(stationName);
-                    alert(`Koupil jsi zastávku: ${stationName}`);
-                    updatePlayerInfo();
-                } else {
-                    alert('Nemáš dost peněz na koupi této zastávky.');
-                }
-            };
+            // Funkce pro generování popup obsahu zastávky
+            function createStationPopup(station) {
+                return `<b>${station.name}</b><br>
+                        <button onclick="buyStation('${station.name}')">Koupit zastávku</button>
+                        <div id="passengers-${station.name}">
+                            ${generatePassengersList(station)}
+                        </div>`;
+            }
 
-            // Funkce pro aktualizaci počtu cestujících
-            function updatePassengers() {
-                stations.forEach(station => {
-                    if (player.ownedStations.has(station.name)) {
-                        station.passengers += 1;
-                        document.getElementById(`passengers-${station.name}`).innerText = station.passengers;
+            // Funkce pro generování seznamu cestujících
+            function generatePassengersList(station) {
+                const passengerCounts = {};
+                station.passengers.forEach(p => {
+                    if (!passengerCounts[p.destination]) {
+                        passengerCounts[p.destination] = 0;
+                    }
+                    passengerCounts[p.destination]++;
+                });
+                const sortedDestinations = Object.keys(passengerCounts).sort((a, b) => passengerCounts[a] - passengerCounts[b]);
+                return sortedDestinations.map(dest => `${dest}: ${passengerCounts[dest]} cestujících`).join('<br>');
+            }
+
+            // Funkce pro generování cestujících
+            function generatePassenger(station) {
+                if (player.unlockedStations.length > 0) {
+                    const destination = player.unlockedStations[Math.floor(Math.random() * player.unlockedStations.length)];
+                    station.passengers.push({ destination });
+                    updateStationPopup(station);
+                }
+            }
+
+            // Funkce pro aktualizaci popup obsahu zastávky
+            function updateStationPopup(station) {
+                const popupContent = createStationPopup(station);
+                const marker = map.eachLayer(layer => {
+                    if (layer.getLatLng && layer.getLatLng().equals(station.location)) {
+                        layer.getPopup().setContent(popupContent);
                     }
                 });
             }
 
-            // Generování cestujících každých 10 sekund
-            setInterval(updatePassengers, 10000);
+            // Funkce pro koupi zastávky
+            window.buyStation = function(stationName) {
+                const station = stations.find(s => s.name === stationName);
+                if (player.money >= 100) {
+                    player.money -= 100;
+                    player.trains += 1;
+                    player.unlockedStations.push(stationName);
+                    alert(`Koupil jsi zastávku: ${stationName}`);
+                    updatePlayerInfo();
+                    updateStationPopup(station);
+                } else {
+                    alert('Nemáš dost peněz na koupi této zastávky.');
+                }
+            };
 
             // Inicializace informací o hráči
             updatePlayerInfo();
@@ -142,5 +171,3 @@
     </script>
 </body>
 </html>
-
-
