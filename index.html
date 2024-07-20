@@ -68,15 +68,15 @@
             }).addTo(map);
 
             const stations = [
-                { name: "Střelské Hoštice", location: [49.3051414, 13.7788925] },
-                { name: "Dolní Poříčí", location: [49.2886125, 13.8008481] },
-                { name: "Katovice", location: [49.2693519, 13.8235978] },
-                { name: "Pracejovice", location: [49.2582358, 13.8489875] },
-                { name: "Strakonice", location: [49.2551575, 13.9163047] },
-                { name: "Modlešovice", location: [49.2565003, 13.9762058] },  
-                { name: "Čejetice", location: [49.2515564, 14.0157986] },
-                { name: "Sudoměř u Písku", location: [49.2494011, 14.0572156] },
-                { name: "Ražice", location: [49.2446214, 14.1085939] },
+                { name: "Střelské Hoštice", location: [49.3051414, 13.7788925], passengers: 0 },
+                { name: "Dolní Poříčí", location: [49.2886125, 13.8008481], passengers: 0 },
+                { name: "Katovice", location: [49.2693519, 13.8235978], passengers: 0 },
+                { name: "Pracejovice", location: [49.2582358, 13.8489875], passengers: 0 },
+                { name: "Strakonice", location: [49.2551575, 13.9163047], passengers: 0 },
+                { name: "Modlešovice", location: [49.2565003, 13.9762058], passengers: 0 },
+                { name: "Čejetice", location: [49.2515564, 14.0157986], passengers: 0 },
+                { name: "Sudoměř u Písku", location: [49.2494011, 14.0572156], passengers: 0 },
+                { name: "Ražice", location: [49.2446214, 14.1085939], passengers: 0 },
             ];
 
             const player = {
@@ -93,8 +93,8 @@
             // Přidání vlastních ikon pro zastávky
             const trainIcon = L.icon({
                 iconUrl: 'https://i.imgur.com/GFCnLMP.png',
-                iconSize: [50, 50], // velikost ikony
-                iconAnchor: [25, 25], // bod, kde se ikona ukotví na značku
+                iconSize: [25, 25], // velikost ikony
+                iconAnchor: [12, 25], // bod, kde se ikona ukotví na značku
                 popupAnchor: [0, -25] // bod, kde se ukotví popup
             });
 
@@ -115,6 +115,37 @@
                     alert('Nemáš dost peněz na koupi této zastávky.');
                 }
             };
+
+            // Funkce pro generování náhodného počtu cestujících
+            function generatePassengers() {
+                stations.forEach(station => {
+                    const passengers = Math.floor(Math.random() * 10); // náhodný počet cestujících mezi 0 a 9
+                    station.passengers += passengers;
+                    console.log(`${passengers} cestujících přidáno na zastávku ${station.name}. Celkem cestujících: ${station.passengers}`);
+                });
+            }
+
+            // Funkce pro přesun cestujících mezi náhodnými zastávkami
+            function movePassengers() {
+                stations.forEach(station => {
+                    if (station.passengers > 0) {
+                        const destinationIndex = Math.floor(Math.random() * stations.length);
+                        const destination = stations[destinationIndex];
+                        if (destination !== station) {
+                            const passengersToMove = Math.floor(Math.random() * station.passengers) + 1;
+                            station.passengers -= passengersToMove;
+                            destination.passengers += passengersToMove;
+                            console.log(`${passengersToMove} cestujících přesunuto ze zastávky ${station.name} na zastávku ${destination.name}.`);
+                        }
+                    }
+                });
+            }
+
+            // Generování cestujících každých 10 sekund
+            setInterval(generatePassengers, 10000);
+
+            // Přesun cestujících každých 15 sekund
+            setInterval(movePassengers, 15000);
 
             // Inicializace informací o hráči
             updatePlayerInfo();
