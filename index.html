@@ -73,7 +73,7 @@
                 { name: "Katovice", location: [49.2693519, 13.8235978], passengers: 0 },
                 { name: "Pracejovice", location: [49.2582358, 13.8489875], passengers: 0 },
                 { name: "Strakonice", location: [49.2551575, 13.9163047], passengers: 0 },
-                { name: "Modlešovice", location: [49.2565003, 13.9762058], passengers: 0 },
+                { name: "Modlešovice", location: [49.2565003, 13.9762058], passengers: 0 },  
                 { name: "Čejetice", location: [49.2515564, 14.0157986], passengers: 0 },
                 { name: "Sudoměř u Písku", location: [49.2494011, 14.0572156], passengers: 0 },
                 { name: "Ražice", location: [49.2446214, 14.1085939], passengers: 0 },
@@ -82,6 +82,7 @@
             const player = {
                 money: 1000,
                 trains: 0,
+                ownedStations: new Set()
             };
 
             // Aktualizace informací o hráči
@@ -101,7 +102,12 @@
             // Přidání vlakových zastávek na mapu
             stations.forEach(station => {
                 const marker = L.marker(station.location, { icon: trainIcon }).addTo(map);
-                marker.bindPopup(`<b>${station.name}</b><br><button onclick="buyStation('${station.name}')">Koupit zastávku</button>`);
+                marker.bindPopup(() => {
+                    return `<b>${station.name}</b><br>
+                            <p>Cestující: <span id="passengers-${station.name}">${station.passengers}</span></p>
+                            <button onclick="buyStation('${station.name}')">Koupit zastávku</button>`;
+                });
+                station.marker = marker;
             });
 
             // Funkce pro koupi zastávky
@@ -109,6 +115,7 @@
                 if (player.money >= 100) {
                     player.money -= 100;
                     player.trains += 1;
+                    player.ownedStations.add(stationName);
                     alert(`Koupil jsi zastávku: ${stationName}`);
                     updatePlayerInfo();
                 } else {
@@ -116,36 +123,18 @@
                 }
             };
 
-            // Funkce pro generování náhodného počtu cestujících
-            function generatePassengers() {
+            // Funkce pro aktualizaci počtu cestujících
+            function updatePassengers() {
                 stations.forEach(station => {
-                    const passengers = Math.floor(Math.random() * 10); // náhodný počet cestujících mezi 0 a 9
-                    station.passengers += passengers;
-                    console.log(`${passengers} cestujících přidáno na zastávku ${station.name}. Celkem cestujících: ${station.passengers}`);
-                });
-            }
-
-            // Funkce pro přesun cestujících mezi náhodnými zastávkami
-            function movePassengers() {
-                stations.forEach(station => {
-                    if (station.passengers > 0) {
-                        const destinationIndex = Math.floor(Math.random() * stations.length);
-                        const destination = stations[destinationIndex];
-                        if (destination !== station) {
-                            const passengersToMove = Math.floor(Math.random() * station.passengers) + 1;
-                            station.passengers -= passengersToMove;
-                            destination.passengers += passengersToMove;
-                            console.log(`${passengersToMove} cestujících přesunuto ze zastávky ${station.name} na zastávku ${destination.name}.`);
-                        }
+                    if (player.ownedStations.has(station.name)) {
+                        station.passengers += 1;
+                        document.getElementById(`passengers-${station.name}`).innerText = station.passengers;
                     }
                 });
             }
 
             // Generování cestujících každých 10 sekund
-            setInterval(generatePassengers, 10000);
-
-            // Přesun cestujících každých 15 sekund
-            setInterval(movePassengers, 15000);
+            setInterval(updatePassengers, 10000);
 
             // Inicializace informací o hráči
             updatePlayerInfo();
@@ -153,4 +142,5 @@
     </script>
 </body>
 </html>
+
 
