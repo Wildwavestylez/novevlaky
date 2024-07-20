@@ -3,81 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Train Game</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <title>Mapa s Vlakovou Hrou</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        body {
+        html, body {
+            height: 100%;
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
         }
 
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
         #map {
-            height: 100vh;
-            width: 100%;
+            flex: 1;
+            height: 75%;
         }
 
-        #controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: white;
+        #info-panel {
+            height: 20%;
             padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background: #f8f8f8;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1);
         }
 
-        button {
-            margin: 5px;
-            padding: 10px;
+        #info-panel h2 {
+            margin-top: 0;
+        }
+
+        #player-info, #train-info {
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="controls">
-        <button id="buyTrain">Koupit Vlak</button>
-        <button id="upgradeTrain">Vylepšit Vlak</button>
+    <div id="app">
+        <div id="map"></div>
+        <div id="info-panel">
+            <h2>Informace o hráči</h2>
+            <div id="player-info">
+                <!-- Hráčské informace -->
+            </div>
+            <h2>Informace o vlaku</h2>
+            <div id="train-info">
+                <!-- Informace o aktuálně označeném vlaku -->
+            </div>
+        </div>
     </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // Inicializace mapy
-        var map = L.map('map').setView([50.0755, 14.4378], 13); // Praha, Česko
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializace mapy
+            const map = L.map('map').setView([50.0755, 14.4378], 13); // Centrujeme na Prahu
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-        }).addTo(map);
+            // Přidání dlaždic OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
 
-        // Herní logika
-        let money = 1000;
-        let trains = [];
-
-        // Funkce pro koupi vlaku
-        function buyTrain() {
-            if (money >= 500) {
-                let train = {
-                    id: trains.length + 1,
-                    position: [50.0755, 14.4378],
-                    speed: 10
-                };
-                trains.push(train);
-                money -= 500;
-                addTrainToMap(train);
-            } else {
-                alert("Nedostatek peněz!");
-            }
-        }
-
-        // Funkce pro přidání vlaku na mapu
-        function addTrainToMap(train) {
-            let marker = L.marker(train.position).addTo(map);
-            marker.bindPopup("Vlak #" + train.id);
-        }
-
-        // Event listener pro tlačítka
-        document.getElementById('buyTrain').addEventListener('click', buyTrain);
-        document.getElementById('upgradeTrain').addEventListener('click', function() {
-            alert('Funkce vylepšení vlaku není ještě implementována.');
+            // Příklad přidání značky na mapu
+            const marker = L.marker([50.0755, 14.4378]).addTo(map);
+            marker.bindPopup('<b>Ahoj!</b><br>Jsem Praha.').openPopup();
         });
     </script>
 </body>
