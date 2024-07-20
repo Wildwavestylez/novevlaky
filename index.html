@@ -90,9 +90,17 @@
                 document.getElementById('player-trains').innerText = player.trains;
             }
 
+            // Přidání vlastních ikon pro zastávky
+            const trainIcon = L.icon({
+                iconUrl: 'https://i.imgur.com/GFCnLMP.png',
+                iconSize: [25, 25], // velikost ikony
+                iconAnchor: [12, 25], // bod, kde se ikona ukotví na značku
+                popupAnchor: [0, -25] // bod, kde se ukotví popup
+            });
+
             // Přidání vlakových zastávek na mapu
             stations.forEach(station => {
-                const marker = L.marker(station.location).addTo(map);
+                const marker = L.marker(station.location, { icon: trainIcon }).addTo(map);
                 marker.bindPopup(`<b>${station.name}</b><br><button onclick="buyStation('${station.name}')">Koupit zastávku</button>`);
             });
 
@@ -114,3 +122,4 @@
     </script>
 </body>
 </html>
+
