@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Game</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <button id="buyTrain">Koupit Vlak</button>
+        <button id="upgradeTrain">Vylepšit Vlak</button>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Inicializace mapy
+        var map = L.map('map').setView([50.0755, 14.4378], 13); // Praha, Česko
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Herní logika
+        let money = 1000;
+        let trains = [];
+
+        // Funkce pro koupi vlaku
+        function buyTrain() {
+            if (money >= 500) {
+                let train = {
+                    id: trains.length + 1,
+                    position: [50.0755, 14.4378],
+                    speed: 10
+                };
+                trains.push(train);
+                money -= 500;
+                addTrainToMap(train);
+            } else {
+                alert("Nedostatek peněz!");
+            }
+        }
+
+        // Funkce pro přidání vlaku na mapu
+        function addTrainToMap(train) {
+            let marker = L.marker(train.position).addTo(map);
+            marker.bindPopup("Vlak #" + train.id);
+        }
+
+        // Event listener pro tlačítka
+        document.getElementById('buyTrain').addEventListener('click', buyTrain);
+        document.getElementById('upgradeTrain').addEventListener('click', function() {
+            alert('Funkce vylepšení vlaku není ještě implementována.');
+        });
+    </script>
+</body>
+</html>
