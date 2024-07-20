@@ -47,7 +47,8 @@
         <div id="info-panel">
             <h2>Informace o hráči</h2>
             <div id="player-info">
-                <!-- Hráčské informace -->
+                <p>Počet peněz: <span id="player-money">1000</span></p>
+                <p>Počet vlaků: <span id="player-trains">0</span></p>
             </div>
             <h2>Informace o vlaku</h2>
             <div id="train-info">
@@ -59,16 +60,56 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Inicializace mapy
-            const map = L.map('map').setView([50.0755, 14.4378], 13); // Centrujeme na Prahu
+            const map = L.map('map').setView([49.2551575, 13.9163047], 10); // Centrujeme na Strakonice
 
             // Přidání dlaždic OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
             }).addTo(map);
 
-            // Příklad přidání značky na mapu
-            const marker = L.marker([50.0755, 14.4378]).addTo(map);
-            marker.bindPopup('<b>Ahoj!</b><br>Jsem Praha.').openPopup();
+            const stations = [
+                { name: "Střelské Hoštice", location: [49.3051414, 13.7788925] },
+                { name: "Dolní Poříčí", location: [49.2886125, 13.8008481] },
+                { name: "Katovice", location: [49.2693519, 13.8235978] },
+                { name: "Pracejovice", location: [49.2582358, 13.8489875] },
+                { name: "Strakonice", location: [49.2551575, 13.9163047] },
+                { name: "Modlešovice", location: [49.2565003, 13.9762058] },  
+                { name: "Čejetice", location: [49.2515564, 14.0157986] },
+                { name: "Sudoměř u Písku", location: [49.2494011, 14.0572156] },
+                { name: "Ražice", location: [49.2446214, 14.1085939] },
+            ];
+
+            const player = {
+                money: 1000,
+                trains: 0,
+            };
+
+            // Aktualizace informací o hráči
+            function updatePlayerInfo() {
+                document.getElementById('player-money').innerText = player.money;
+                document.getElementById('player-trains').innerText = player.trains;
+            }
+
+            // Přidání vlakových zastávek na mapu
+            stations.forEach(station => {
+                const marker = L.marker(station.location).addTo(map);
+                marker.bindPopup(`<b>${station.name}</b><br><button onclick="buyStation('${station.name}')">Koupit zastávku</button>`);
+            });
+
+            // Funkce pro koupi zastávky
+            window.buyStation = function(stationName) {
+                if (player.money >= 100) {
+                    player.money -= 100;
+                    player.trains += 1;
+                    alert(`Koupil jsi zastávku: ${stationName}`);
+                    updatePlayerInfo();
+                } else {
+                    alert('Nemáš dost peněz na koupi této zastávky.');
+                }
+            };
+
+            // Inicializace informací o hráči
+            updatePlayerInfo();
         });
     </script>
 </body>
