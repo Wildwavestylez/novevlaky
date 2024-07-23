@@ -111,8 +111,9 @@
 
             // Funkce pro generování popup obsahu zastávky
             function createStationPopup(station) {
+                const isUnlocked = player.unlockedStations.includes(station.name);
                 return `<b>${station.name}</b><br>
-                        <button onclick="buyStation('${station.name}')">Koupit zastávku</button>
+                        ${isUnlocked ? '' : `<button onclick="buyStation('${station.name}')">Koupit zastávku</button>`}
                         <div id="passengers-${station.name}">
                             ${generatePassengersList(station)}
                         </div>`;
@@ -142,10 +143,9 @@
 
             // Funkce pro aktualizaci popup obsahu zastávky
             function updateStationPopup(station) {
-                const popupContent = createStationPopup(station);
                 const marker = map.eachLayer(layer => {
                     if (layer.getLatLng && layer.getLatLng().equals(station.location)) {
-                        layer.getPopup().setContent(popupContent);
+                        layer.getPopup().setContent(createStationPopup(station));
                     }
                 });
             }
