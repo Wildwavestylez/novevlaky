@@ -99,22 +99,34 @@ function createLine(startStop, parentLine) {
 
 function spawnBus(line) {
   game.buses.push({
+    id: crypto.randomUUID(),
     line,
-    index: 0,
+    from: 0,
+    to: 1,
+    progress: 0,
+    speed: 0.0005, // rychlost pohybu
     dir: 1
   });
 }
 
 function moveBus(bus) {
-  const len = bus.line.stops.length;
-  if (len < 2) return;
+  const stops = bus.line.stops;
+  if (stops.length < 2) return;
 
-  bus.index += bus.dir;
-  if (bus.index >= len - 1 || bus.index <= 0) {
-    bus.dir *= -1;
+  bus.progress += bus.speed;
+
+  if (bus.progress >= 1) {
+    bus.progress = 0;
+    bus.from += bus.dir;
+    bus.to += bus.dir;
+
+    if (bus.to >= stops.length || bus.from < 0) {
+      bus.dir *= -1;
+      bus.from += bus.dir * 2;
+      bus.to += bus.dir * 2;
+    }
   }
 }
-
 /* =========================
    NÁKUP ZASTÁVKY
 ========================= */
