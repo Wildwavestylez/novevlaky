@@ -12,118 +12,177 @@ export const game = {
   buses: []
 };
 
-// START HRY VE VIMPERKU
+/* =========================
+   START – VIMPERK
+========================= */
 export async function startGame() {
-  const lat = 49.0560; // Vimperk
+  const lat = 49.0560;
   const lon = 13.7550;
 
   game.started = true;
   game.stops = await fetchBusStops(lat, lon);
 
-  const startStop = game.stops[0];
-  game.ownedStops.push(startStop);
+  const start = game.stops[0];
+  game.ownedStops.push(start);
 
-  log(`🏁 Start hry: ${startStop.name}`);
-
-  // první linka a autobus
-  const line = { id: game.nextLineId++, stops: [[startStop.lat, startStop.lon]] };
-  game.lines.push(line);
-  spawnBus(line);
-
-  log(`🚌 Založena linka ${line.id}`);
+  const line = createLine(start, null);
+  log(`🏁 Start hry: ${start.name}`);
+  log(`🚌 Založena linka ${line.id} (${line.directionName})`);
 }
 
-// TICK – každý 1s
+/* =========================
+   TICK
+========================= */
 export function tick() {
   if (!game.started) return;
 
-  // autobusy vydělávají
+  // výdělek
   game.buses.forEach(bus => {
-    const line = bus.line;
-    const earnings = 50 * line.stops.length;
-    game.money += earnings;
-
+    game.money += bus.line.stops.length * 40;
     moveBus(bus);
   });
 
-  // AI rozhodování
   if (game.money >= 300) {
-    expandAI();
+    expandSmart();
   }
 }
 
-// AI EXPANZE S VĚTVENÍM
-function expandAI() {
-  // Najdeme nejbližší volnou zastávku ke kterékoli line
-  const candidates = game.stops.filter(s => !game.ownedStops.includes(s));
-  if (candidates.length === 0) return;
+/* =========================
+   CHYTRÁ EXPANZE
+========================= */
+function expandSmart() {
+  const freeStops = game.stops.filter(s => !game.ownedStops.includes(s));
+  if (!freeStops.length) return;
 
-  // vybereme náhodnou nejbližší zastávku k existující lince
-  const line = game.lines[Math.floor(Math.random() * game.lines.length)];
-  const lastStop = line.stops[line.stops.length - 1];
-  let closest = candidates[0];
-  let minDist = distance(lastStop, [closest.lat, closest.lon]);
+  // zkusíme rozšířit existující linky
+  for (const line of game.lines) {
+    const next = findStopInDirection(line, freeStops);
+    if (!next) continue;
 
-  for (let stop of candidates) {
-    const dist = distance(lastStop, [stop.lat, stop.lon]);
-    if (dist < minDist) {
-      minDist = dist;
-      closest = stop;
-    }
+    buyStop(line, next);
+    return;
   }
 
-  // koupíme zastávku
-  game.ownedStops.push(closest);
+  // žádná linka nemá kam → větvení
+  const baseLine = game.lines[Math.floor(Math.random() * game.lines.length)];
+  const baseStop = lastStop(baseLine);
+
+  const branchStop = nearestStop(baseStop, freeStops);
+  if (!branchStop) return;
+
+  const newLine = createLine(branchStop, baseLine);
   game.money -= 300;
-  line.stops.push([closest.lat, closest.lon]);
+  game.ownedStops.push(branchStop);
 
-  log(`➕ Koupena zastávka ${closest.name}, přidána do linky ${line.id}`);
-
-  // větvení – pokud linka má 5 zastávek, založíme novou linku s touto zastávkou jako start
-  if (line.stops.length >= 5) {
-    const newLine = { id: game.nextLineId++, stops: [[closest.lat, closest.lon]] };
-    game.lines.push(newLine);
-    spawnBus(newLine);
-    log(`🌿 Větvení: založena nová linka ${newLine.id} z ${closest.name}`);
-  }
+  log(`🌿 Větvení: linka ${newLine.id} z ${branchStop.name}`);
 }
 
-// SPAWN AUTOBUS
+/* =========================
+   LINE / BUS
+========================= */
+function createLine(startStop, parentLine) {
+  const direction = parentLine
+    ? randomPerpendicular(parentLine.direction)
+    : randomDirection();
+
+  const line = {
+    id: game.nextLineId++,
+    stops: [[startStop.lat, startStop.lon]],
+    direction,
+    directionName: directionName(direction)
+  };
+
+  game.lines.push(line);
+  spawnBus(line);
+  return line;
+}
+
 function spawnBus(line) {
-  const bus = {
+  game.buses.push({
     line,
     index: 0,
-    direction: 1
-  };
-  game.buses.push(bus);
+    dir: 1
+  });
 }
 
-// POHYB AUTOBUSU
 function moveBus(bus) {
-  const line = bus.line;
-  if (line.stops.length < 2) return;
+  const len = bus.line.stops.length;
+  if (len < 2) return;
 
-  bus.index += bus.direction;
-
-  if (bus.index >= line.stops.length) {
-    bus.index = line.stops.length - 1;
-    bus.direction = -1;
-  }
-  if (bus.index < 0) {
-    bus.index = 0;
-    bus.direction = 1;
+  bus.index += bus.dir;
+  if (bus.index >= len - 1 || bus.index <= 0) {
+    bus.dir *= -1;
   }
 }
 
-// FUNKCE PRO VÝPOČET VZDÁLENOSTI (m)
-function distance(a, b) {
-  const R = 6371e3;
-  const φ1 = a[0] * Math.PI / 180;
-  const φ2 = b[0] * Math.PI / 180;
-  const Δφ = (b[0]-a[0])*Math.PI/180;
-  const Δλ = (b[1]-a[1])*Math.PI/180;
+/* =========================
+   NÁKUP ZASTÁVKY
+========================= */
+function buyStop(line, stop) {
+  game.money -= 300;
+  game.ownedStops.push(stop);
+  line.stops.push([stop.lat, stop.lon]);
 
-  const aa = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-  const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1-aa));
-  return R * c;
+  log(`➕ Koupena zastávka ${stop.name}, linka ${line.id}`);
+}
+
+/* =========================
+   SMĚROVÁ LOGIKA
+========================= */
+function findStopInDirection(line, stops) {
+  const last = lastStop(line);
+  let best = null;
+  let bestScore = -Infinity;
+
+  for (const s of stops) {
+    const v = vector(last, s);
+    const dot = dotProduct(v, line.direction);
+    if (dot > bestScore && dot > 0) {
+      bestScore = dot;
+      best = s;
+    }
+  }
+  return best;
+}
+
+function lastStop(line) {
+  const s = line.stops.at(-1);
+  return { lat: s[0], lon: s[1] };
+}
+
+function nearestStop(base, stops) {
+  return stops.sort((a, b) =>
+    dist(base, a) - dist(base, b)
+  )[0];
+}
+
+/* =========================
+   VEKTORY
+========================= */
+function randomDirection() {
+  const a = Math.random() * Math.PI * 2;
+  return [Math.cos(a), Math.sin(a)];
+}
+
+function randomPerpendicular([x, y]) {
+  return Math.random() > 0.5 ? [-y, x] : [y, -x];
+}
+
+function dotProduct(a, b) {
+  return a[0]*b[0] + a[1]*b[1];
+}
+
+function vector(a, b) {
+  return [b.lat - a.lat, b.lon - a.lon];
+}
+
+function directionName([x, y]) {
+  if (Math.abs(x) > Math.abs(y)) {
+    return x > 0 ? 'sever' : 'jih';
+  }
+  return y > 0 ? 'východ' : 'západ';
+}
+
+function dist(a, b) {
+  return Math.hypot(a.lat - b.lat, a.lon - b.lon);
 }
