@@ -1,28 +1,31 @@
+// server/telegram.js
 import fetch from 'node-fetch';
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
+  console.warn('⚠️ Telegram token nebo chat ID není nastaven!');
+}
 
 export async function log(text) {
-  if (!TOKEN || !CHAT_ID) {
-    console.warn('⚠️ Telegram není nastaven');
-    return;
-  }
+  console.log(text); // vždy log do konzole
 
-  const url = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
 
   try {
-    await fetch(url, {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id: CHAT_ID,
+        chat_id: TELEGRAM_CHAT_ID,
         text,
         parse_mode: 'HTML'
       })
     });
-  } catch (e) {
-    console.error('Telegram error', e);
+  } catch (err) {
+    console.error('Chyba při posílání Telegram zprávy:', err);
   }
 }
