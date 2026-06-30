@@ -1,82 +1,54 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-  font-family: Arial;
-}
-
-/* 🔥 HLAVNÍ ROZDĚLENÍ STRÁNKY */
 body {
-  display: flex;
-  flex-direction: column;
+  margin: 0;
+  font-family: Arial;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* 🗺️ MAPA = HORNÍ ČÁST */
+/* MAP */
 #map {
-  flex: 0 0 40%;   /* 40 % výšky */
-  min-height: 0;
-  position: relative;
-  z-index: 1;
+  height: 55vh;
 }
 
-/* 📦 UI = DOLNÍ ČÁST */
+/* UI PANEL */
 #ui {
-  flex: 1;         /* zbytek prostoru */
-  min-height: 0;
-
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45vh;
   background: #111;
   color: white;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-
+  overflow-y: auto;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
-
-  z-index: 10;
 }
 
-/* TOP BAR */
+/* TOP */
 #top {
   padding: 8px;
   background: #1c1c1c;
-  font-size: 13px;
 }
 
-/* OBSAH UI */
+/* LAYOUT */
 #content {
   display: flex;
-  flex: 1;
-  min-height: 0;
 }
 
-/* LEVÝ PANEL */
+/* QUEUE */
 #queue {
   width: 40%;
   background: #151515;
   overflow-y: auto;
-  min-height: 0;
 }
 
-/* PRAVÝ PANEL */
-#detail {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-/* TRAIN CARD */
 .train {
   padding: 8px;
   margin: 6px;
   background: #222;
   border-radius: 8px;
-  cursor: pointer;
   position: relative;
+  cursor: pointer;
 }
 
 .dot {
@@ -89,45 +61,28 @@ body {
   top: 8px;
 }
 
-/* IMAGE */
+/* DETAIL */
+#detail {
+  flex: 1;
+  padding: 10px;
+}
+
 img {
   width: 100%;
-  max-height: 120px;
-  object-fit: cover;
   border-radius: 10px;
 }
 
-/* BUTTONS */
-button {
-  margin: 4px;
-  padding: 8px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.g { background: #4caf50; color: white; }
-.b { background: #2196f3; color: white; }
-.r { background: #f44336; color: white; }
-.y { background: #ff9800; color: white; }
-
-/* PROGRESS BAR */
+/* BARS */
 .bar {
   height: 8px;
   background: #333;
-  border-radius: 5px;
-  overflow: hidden;
   margin: 5px 0;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .fill {
   height: 100%;
   width: 0%;
   background: limegreen;
-}
-
-/* LEAFLET FIX */
-.leaflet-container {
-  z-index: 0 !important;
 }
