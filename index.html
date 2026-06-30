@@ -1,146 +1,59 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8">
-  <title>BUSGAME – Live Map</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Train Ops - IDEAL ARCH v2</title>
 
+  <!-- 🗺️ Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-
-    #panel {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-family: sans-serif;
-      box-shadow: 0 2px 6px rgba(0,0,0,.2);
-    }
-  </style>
+  <!-- 🎨 tvůj styl -->
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div id="panel">
-  <b>🚌 BUSGAME</b><br>
-  <span id="money">💰 0 Kč</span>
-</div>
+  <div id="map"></div>
 
-<div id="map"></div>
+  <div id="ui">
+    <div id="top">
+      💰 <span id="money">0</span> Kč | 🚉 Plzeň hl.n. | Koleje: 2
+    </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <div id="content">
+      <div id="queue"></div>
 
-<script>
-/* ================= MAP ================= */
+      <div id="detail">
+        <h3 id="name">Vyber vlak</h3>
+        <p id="state">---</p>
 
-const map = L.map('map').setView([49.058, 13.775], 12);
+        <img id="img" style="display:none;"/>
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
-}).addTo(map);
+        <div class="bar"><div id="p1" class="fill"></div></div>
+        <div class="bar"><div id="p2" class="fill"></div></div>
+        <div class="bar"><div id="p3" class="fill"></div></div>
 
-/* ================= LAYERS ================= */
+        <div id="actions"></div>
+      </div>
+    </div>
+  </div>
 
-const stopsLayer = L.layerGroup().addTo(map);
-const linesLayer = L.layerGroup().addTo(map);
-const busLayer   = L.layerGroup().addTo(map);
+  <!-- 🗺️ Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-const busMarkers = new Map();
+  <!-- 📊 data (trains + routes) -->
+  <script src="data.js"></script>
 
-/* ================= HELPERS ================= */
+  <!-- 🧠 eruda (debug konzole v mobilu) -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
 
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
-
-/* ================= UPDATE ================= */
-
-async function update() {
-  const res = await fetch('/api/state');
-  const state = await res.json();
-
-  // 💰 money
-  document.getElementById('money').innerText = `💰 ${state.money} Kč`;
-
-  // 🚏 STOPS
-  stopsLayer.clearLayers();
-  state.stops.forEach(s => {
-    L.circleMarker([s.lat, s.lon], {
-      radius: 5,
-      color: '#000',
-      fillColor: '#ffcc00',
-      fillOpacity: 1
-    })
-    .bindTooltip(s.name)
-    .addTo(stopsLayer);
-  });
-
-  // 🟦 LINES
-  linesLayer.clearLayers();
-  state.lines.forEach(line => {
-    L.polyline(line.stops, {
-      color: 'blue',
-      weight: 4
-    }).addTo(linesLayer);
-  });
-
-  // 🚌 BUSES (plynulý pohyb)
-  state.buses?.forEach(bus => {
-    const A = bus.stops[bus.from];
-    const B = bus.stops[bus.to];
-    if (!A || !B) return;
-
-    const lat = lerp(A[0], B[0], bus.progress);
-    const lon = lerp(A[1], B[1], bus.progress);
-
-    let marker = busMarkers.get(bus.id);
-
-    if (!marker) {
-      marker = L.circleMarker([lat, lon], {
-        radius: 6,
-        color: 'red',
-        fillColor: 'red',
-        fillOpacity: 1
-      }).addTo(busLayer);
-
-      busMarkers.set(bus.id, marker);
-    } else {
-      marker.setLatLng([lat, lon]);
-    }
-  });
-}
-
-/* ================= LOOP ================= */
-
-// rychlé překreslení busů
-setInterval(update, 50);
-
-/* ================= START CLICK ================= */
-
-map.once('click', async e => {
-  await fetch('/api/start', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(e.latlng)
-  });
-});
-</script>
+  <!-- 🎮 hlavní hra -->
+  <script src="game.js"></script>
 
 </body>
 </html>
