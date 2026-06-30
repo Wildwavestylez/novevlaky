@@ -1,0 +1,61 @@
+function render(){
+  const q = document.getElementById("queue");
+  q.innerHTML = "";
+
+  trains.forEach(t=>{
+    let div = document.createElement("div");
+    div.className = "train";
+
+    let dot = t.pendingAction ? '<div class="dot"></div>' : '';
+
+    div.innerHTML = `
+      ${dot}
+      <b>${t.name}</b><br>
+      <small>${t.state}</small>
+    `;
+
+    div.onclick = ()=> {
+      selected = t;
+      uiRenderDetail();
+    };
+
+    q.appendChild(div);
+  });
+
+  uiRenderDetail();
+  uiRenderTop();
+}
+
+function uiRenderDetail(){
+  if(!selected) return;
+
+  document.getElementById("name").innerText = selected.name;
+  document.getElementById("state").innerText = selected.state;
+  document.getElementById("img").src = selected.image;
+
+  document.getElementById("exitBar").style.width = selected.progress.exit+"%";
+  document.getElementById("cleanBar").style.width = selected.progress.clean+"%";
+  document.getElementById("boardBar").style.width = selected.progress.board+"%";
+
+  let a = document.getElementById("actions");
+  a.innerHTML = "";
+
+  if(selected.state === "ARRIVED")
+    a.innerHTML += `<button onclick="startTimer(selected,'exit')">VYLOŽIT</button>`;
+
+  if(selected.state === "WAIT_CLEAN")
+    a.innerHTML += `<button onclick="startTimer(selected,'clean')">ÚKLID</button>`;
+
+  if(selected.state === "WAIT_BOARD")
+    a.innerHTML += `<button onclick="startTimer(selected,'board')">NÁSTUP</button>`;
+
+  if(selected.state === "READY_DEPART")
+    a.innerHTML += `<button onclick="depart(selected)">ODJEZD</button>`;
+}
+
+function uiRenderTop(){
+  document.getElementById("money").innerText = money;
+  document.getElementById("level").innerText = level;
+  document.getElementById("xp").innerText = xp;
+  document.getElementById("xpNeed").innerText = xpNeed;
+}
