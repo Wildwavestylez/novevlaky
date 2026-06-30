@@ -5,50 +5,42 @@ body {
   overflow: hidden;
 }
 
-/* MAP */
 #map {
   height: 55vh;
 }
 
-/* UI PANEL */
 #ui {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   height: 45vh;
   background: #111;
   color: white;
-  overflow-y: auto;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
-/* TOP */
-#top {
-  padding: 8px;
+#topbar {
+  padding: 6px;
   background: #1c1c1c;
+  font-size: 13px;
 }
 
-/* LAYOUT */
 #content {
   display: flex;
+  flex: 1;
 }
 
-/* QUEUE */
 #queue {
   width: 40%;
-  background: #151515;
   overflow-y: auto;
+  background: #151515;
 }
 
 .train {
   padding: 8px;
-  margin: 6px;
+  margin: 5px;
   background: #222;
   border-radius: 8px;
-  position: relative;
   cursor: pointer;
+  position: relative;
 }
 
 .dot {
@@ -61,7 +53,6 @@ body {
   top: 8px;
 }
 
-/* DETAIL */
 #detail {
   flex: 1;
   padding: 10px;
@@ -72,16 +63,14 @@ img {
   border-radius: 10px;
 }
 
-/* BARS */
 .bar {
-  height: 8px;
+  height: 6px;
   background: #333;
   margin: 5px 0;
-  border-radius: 6px;
-  overflow: hidden;
+  border-radius: 5px;
 }
 
-.fill {
+.bar > div {
   height: 100%;
   width: 0%;
   background: limegreen;
