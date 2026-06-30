@@ -1,234 +1,159 @@
-// =========================
-// 🚆 TRAIN OPS ENGINE CORE
-// =========================
+// 🌍 MAPA
+const map = L.map('map').setView([49.7410, 13.3860], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// 🌍 STATE
+// 💰 STATE
 let money = 0;
 let selected = null;
+
+// 🚉 KOLEJE
 let tracks = [null, null];
 
-
-// =========================
+// ============================
 // 🚉 ASSIGN TRACK
-// =========================
+// ============================
 function assign(train){
-  for(let i = 0; i < tracks.length; i++){
+  for(let i=0;i<tracks.length;i++){
     if(!tracks[i]){
       tracks[i] = train.id;
-      train.track = i + 1;
-
+      train.track = i+1;
       train.state = "ARRIVED";
-
-      train.pendingTasks = 0;
+      train.pendingAction = true;
       return;
     }
   }
 }
 
-
-// =========================
-// 🎯 DOT LOGIC
-// =========================
-function hasDot(train, isSelected){
-  return train.pendingTasks > 0 && !isSelected;
-}
-
-
-// =========================
-// ▶️ START TASK (UNIVERSAL)
-// =========================
-function startTask(type){
-  if(!selected) return;
-
-  const train = selected;
-
-  if(!train.service) return;
-  if(train.service[type] !== "idle") return;
-
-  train.service[type] = "running";
-
-  const duration = train.timers[type];
-  let elapsed = 0;
-
-  let interval = setInterval(() => {
-
-    elapsed++;
-
-    train.progress[type] = (elapsed / duration) * 100;
-
-    if(elapsed >= duration){
-      clearInterval(interval);
-
-      train.progress[type] = 100;
-      train.service[type] = "done";
-
-      // 🟢 notifikace (dot)
-      train.pendingTasks++;
-
-      // 🔁 STATE FLOW (jen popis stavu, ne logika hry)
-      if(type === "exit")  train.state = "WAIT_CLEAN";
-      if(type === "clean") train.state = "WAIT_BOARD";
-      if(type === "board") train.state = "READY_DEPART";
-
-      render();
-    }
-
-    if(selected?.id === train.id){
-      updateDetail();
-    }
-
-  }, 1000);
-}
-
-
-// =========================
-// 🚂 DEPART (UNIVERSAL)
-// =========================
-function departTrain(){
-  if(!selected) return;
-  if(selected.state !== "READY_DEPART") return;
-
-  const train = selected;
-
-  money += 100;
-  document.getElementById("money").innerText = money;
-
-  tracks[train.track - 1] = null;
-
-  train.track = null;
-  train.pendingTasks = 0;
-
-  train.service = resetService(train);
-  train.progress = resetProgress(train);
-
-  train.state = "EN_ROUTE_THERE";
-  train.currentStep = 0;
-
-  selected = null;
-
-  render();
-}
-
-
-// =========================
-// 🔧 RESET HELPERS
-// =========================
-function resetService(train){
-  const obj = {};
-  Object.keys(train.timers || {}).forEach(k => {
-    obj[k] = "idle";
-  });
-  return obj;
-}
-
-function resetProgress(train){
-  const obj = {};
-  Object.keys(train.timers || {}).forEach(k => {
-    obj[k] = 0;
-  });
-  return obj;
-}
-
-
-// =========================
-// 🎯 SELECT TRAIN
-// =========================
-function selectTrain(train){
-  selected = train;
-  updateDetail();
-}
-
-
-// =========================
-// 📋 RENDER QUEUE (ENGINE NEUTRAL)
-// =========================
-function renderQueue(trains){
+// ============================
+// 🎨 RENDER LIST
+// ============================
+function render(){
   const q = document.getElementById("queue");
-  if(!q) return;
-
   q.innerHTML = "";
 
   trains.forEach(t => {
 
     const isSelected = selected && selected.id === t.id;
-    const dot = hasDot(t, isSelected);
+    const showDot = t.pendingAction && !isSelected;
 
-    const el = document.createElement("div");
-    el.className = "train";
+    const div = document.createElement("div");
+    div.className = "train";
 
-    el.innerHTML = `
-      ${dot ? '<div class="dot"></div>' : ''}
+    div.innerHTML = `
+      ${showDot ? '<div class="dot"></div>' : ''}
       <b>${t.name}</b><br>
       <small>${t.state}</small>
     `;
 
-    el.onclick = () => selectTrain(t);
+    div.onclick = () => {
+      selected = t;
+      updateDetail();
+    };
 
-    q.appendChild(el);
+    q.appendChild(div);
   });
+
+  updateDetail();
 }
 
-
-// =========================
-// 🎛️ RENDER ACTIONS (DATA DRIVEN)
-// =========================
-function renderActions(){
-  const a = document.getElementById("actions");
-  if(!a || !selected) return;
-
-  a.innerHTML = "";
-
-  const s = selected.state;
-
-  if(s === "ARRIVED")
-    a.innerHTML += `<button class="g" onclick="startTask('exit')">VYLOŽIT</button>`;
-
-  if(s === "WAIT_CLEAN")
-    a.innerHTML += `<button class="y" onclick="startTask('clean')">ÚKLID</button>`;
-
-  if(s === "WAIT_BOARD")
-    a.innerHTML += `<button class="b" onclick="startTask('board')">NÁSTUP</button>`;
-
-  if(s === "READY_DEPART")
-    a.innerHTML += `<button class="r" onclick="departTrain()">ODJEZD</button>`;
-}
-
-
-// =========================
-// 🎛️ DETAIL UPDATE
-// =========================
+// ============================
+// 🎯 DETAIL
+// ============================
 function updateDetail(){
-
-  if(!selected){
-    document.getElementById("name").innerText = "Vyber vlak";
-    document.getElementById("state").innerText = "---";
-    return;
-  }
+  if(!selected) return;
 
   document.getElementById("name").innerText = selected.name;
   document.getElementById("state").innerText = selected.state;
+  document.getElementById("img").src = selected.image;
+  document.getElementById("img").style.display = "block";
 
-  const img = document.getElementById("img");
-  if(img){
-    img.src = selected.image;
-  }
-
-  // progress bars (univerzální)
-  Object.keys(selected.progress || {}).forEach((k, i) => {
-    const bar = document.getElementById("p" + (i + 1));
-    if(bar){
-      bar.style.width = (selected.progress[k] || 0) + "%";
-    }
-  });
+  document.getElementById("p1").style.width = (selected.progress.exit || 0) + "%";
+  document.getElementById("p2").style.width = (selected.progress.clean || 0) + "%";
+  document.getElementById("p3").style.width = (selected.progress.board || 0) + "%";
 
   renderActions();
 }
 
+// ============================
+// ⚙️ ACTIONS
+// ============================
+function renderActions(){
+  const a = document.getElementById("actions");
+  a.innerHTML = "";
 
-// =========================
-// 🧠 SAFE GAME LOOP HOOK
-// =========================
-function gameTick(trains){
+  if(!selected) return;
+
+  if(selected.state === "ARRIVED")
+    a.innerHTML += `<button onclick="start('exit')">VYLOŽIT</button>`;
+
+  if(selected.state === "WAIT_CLEAN")
+    a.innerHTML += `<button onclick="start('clean')">ÚKLID</button>`;
+
+  if(selected.state === "WAIT_BOARD")
+    a.innerHTML += `<button onclick="start('board')">NÁSTUP</button>`;
+
+  if(selected.state === "READY_DEPART")
+    a.innerHTML += `<button onclick="depart()">ODJEZD</button>`;
+}
+
+// ============================
+// ▶️ TIMER ENGINE
+// ============================
+function start(type){
+  if(!selected) return;
+
+  const t = selected;
+
+  t.timer = t.timers[type];
+  t.pendingAction = false;
+
+  const interval = setInterval(() => {
+
+    t.timer--;
+
+    const total = t.timers[type];
+    t.progress[type] = ((total - t.timer)/total)*100;
+
+    if(t.timer <= 0){
+      clearInterval(interval);
+
+      t.progress[type] = 100;
+      t.pendingAction = true;
+
+      if(type==="exit") t.state="WAIT_CLEAN";
+      if(type==="clean") t.state="WAIT_BOARD";
+      if(type==="board") t.state="READY_DEPART";
+
+      render();
+    }
+
+    if(selected?.id === t.id) updateDetail();
+
+  },1000);
+}
+
+// ============================
+// 🚂 DEPART
+// ============================
+function depart(){
+  if(!selected || selected.state !== "READY_DEPART") return;
+
+  money += 100;
+  document.getElementById("money").innerText = money;
+
+  tracks[selected.track-1] = null;
+
+  selected.state = "DONE";
+  selected.pendingAction = false;
+  selected = null;
+
+  render();
+}
+
+// ============================
+// 🔁 GAME LOOP
+// ============================
+setInterval(() => {
 
   trains.forEach(t => {
 
@@ -236,18 +161,17 @@ function gameTick(trains){
       assign(t);
     }
 
-    // 🚆 travel system (pokud existuje)
     if(t.state === "COMING"){
       t.travel--;
-
       if(t.travel <= 0){
         t.state = "WAIT_ASSIGN";
       }
     }
-
-    // 🧠 future: route engine hook
-    // if(t.state.startsWith("EN_ROUTE")) { ... }
   });
 
-  renderQueue(trains);
-}
+  render();
+
+}, 1000);
+
+// START
+render();
