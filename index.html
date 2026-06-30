@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Train Ops Engine v2</title>
+  <title>Train Ops - Core Engine</title>
+
+  <link rel="stylesheet" href="styles.css"/>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -15,8 +16,10 @@
 
 <div id="ui">
 
-  <div id="top">
-    💰 <span id="money">0</span> Kč | 🚉 Plzeň | Koleje: <span id="tracksCount"></span>
+  <div id="topbar">
+    💰 <span id="money">0</span> Kč |
+    ⭐ Level: <span id="level">0</span> |
+    XP: <span id="xp">0</span>/<span id="xpNeed">1</span>
   </div>
 
   <div id="content">
@@ -26,23 +29,25 @@
       <h3 id="name">Vyber vlak</h3>
       <p id="state">---</p>
 
-      <img id="img" style="display:none;"/>
+      <img id="img" />
 
-      <div class="bar"><div id="p1" class="fill"></div></div>
-      <div class="bar"><div id="p2" class="fill"></div></div>
-      <div class="bar"><div id="p3" class="fill"></div></div>
+      <div class="bars">
+        <div class="bar"><div id="exitBar"></div></div>
+        <div class="bar"><div id="cleanBar"></div></div>
+        <div class="bar"><div id="boardBar"></div></div>
+      </div>
 
       <div id="actions"></div>
     </div>
   </div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script src="routes.js"></script>
-<script src="trains.js"></script>
 <script src="data.js"></script>
-<script src="game.js"></script>
+<script src="engine.js"></script>
+<script src="ui.js"></script>
 
 </body>
 </html>
